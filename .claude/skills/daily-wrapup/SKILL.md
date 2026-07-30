@@ -117,7 +117,7 @@ Up next: Implement FastAPI skeleton for /schools endpoint (beads-039)
 ## Rules
 
 - Always use the date from `currentDate` context — never infer or guess
-- Create `log/` at the project root (`c:\Users\gener\Downloads\Test\log\`) if it doesn't exist
+- Create `log/` at this project's own root (wherever this repo is checked out) if it doesn't exist
 - Overwrite today's log file if it already exists — this is idempotent
 - If there is nothing to report in a section, write `- (nothing today)` rather than omitting the heading
 - Do not run `git add` or `git commit` — the user controls when the log gets committed
