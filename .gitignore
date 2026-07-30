@@ -1,0 +1,9 @@
+# Secrets — never commit
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Local Claude Code settings (machine-specific — never commit)
+.claude/settings.local.json

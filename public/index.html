@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Bot — Status</title>
+<link rel="icon" href="data:,">
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+        --accent: #4a6cf7;
+        --accent-h: #3d5ce0;
+        --bg: #f4f5fb;
+        --text: #1c1d2b;
+        --muted: #6b6f8a;
+        --card: #ffffff;
+        --line: #e2e4f0;
+        --good: #1e9e6c;
+    }
+    body {
+        font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+    }
+
+    /* ── Login ─────────────────────────────────────── */
+    #login-screen {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 40px;
+        width: 360px;
+        box-shadow: 0 8px 24px -12px rgba(28,29,43,0.18);
+        text-align: center;
+    }
+    .login-card h1 { font-size: 1.7rem; margin-bottom: 6px; }
+    .login-card p { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
+    .login-card input {
+        width: 100%;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+    .login-card input:focus { outline: none; border-color: var(--accent); }
+    .login-card button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 8px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .login-card button:hover { background: var(--accent-h); }
+    .login-card button:disabled { opacity: .6; cursor: not-allowed; }
+    #login-error { color: #d14343; font-size: 0.85rem; margin-top: 12px; display: none; }
+
+    /* ── Dashboard ─────────────────────────────────── */
+    #app { display: none; max-width: 880px; margin: 0 auto; padding: 32px 24px 64px; }
+    header.top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 28px;
+    }
+    header.top h1 { font-size: 1.4rem; }
+    header.top .badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--accent);
+        background: #eceeff;
+        padding: 3px 9px;
+        border-radius: 999px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+    #logout-btn {
+        background: none;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 14px;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+    #logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+    .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 18px 20px;
+    }
+    .card .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 8px; }
+    .card .name { font-weight: 700; font-size: 1.05rem; margin-bottom: 10px; }
+    .card dl { font-size: 0.82rem; }
+    .card dt { color: var(--muted); margin-top: 8px; }
+    .card dd { font-weight: 600; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; }
+
+    .snapshot-note { font-size: 0.72rem; color: var(--muted); margin-top: 10px; font-style: italic; }
+
+    section.history h2 { font-size: 1.1rem; margin-bottom: 12px; }
+    .log-entry {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        margin-bottom: 12px;
+        overflow: hidden;
+    }
+    .log-entry summary {
+        padding: 12px 16px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+    }
+    .log-entry summary::-webkit-details-marker { display: none; }
+    .log-entry summary .arrow { color: var(--muted); font-weight: 400; }
+    .log-entry[open] summary .arrow { transform: rotate(90deg); display: inline-block; }
+    .log-entry pre {
+        margin: 0 16px 16px;
+        padding: 12px 14px;
+        background: #f8f9fd;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text);
+    }
+    #empty-logs { color: var(--muted); font-size: 0.85rem; }
+
+    @media (max-width: 640px) {
+        .grid { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-card">
+        <h1>🤖 Personal Bot</h1>
+        <p>Module 6 assessment — status dashboard</p>
+        <input type="text" id="un" placeholder="Username" autofocus />
+        <input type="password" id="pw" placeholder="Password"
+               onkeydown="if(event.key==='Enter') doLogin()" />
+        <button id="login-btn" onclick="doLogin()">Sign in</button>
+        <div id="login-error">Incorrect username or password.</div>
+    </div>
+</div>
+
+<div id="app">
+    <header class="top">
+        <h1>Personal Bot <span class="badge">MODULE 6</span></h1>
+        <button id="logout-btn" onclick="doLogout()">Log out</button>
+    </header>
+
+    <div class="grid" id="cards"></div>
+
+    <section class="history">
+        <h2>Wrap-up log history</h2>
+        <div id="log-list"></div>
+        <div id="empty-logs" style="display:none;">No wrap-up logs yet.</div>
+    </section>
+</div>
+
+<script>
+const S = { token: localStorage.getItem('pb_token') || '' };
+if (S.token) showApp();
+
+async function doLogin() {
+    const btn = document.getElementById('login-btn');
+    const err = document.getElementById('login-error');
+    const un = document.getElementById('un').value.trim();
+    const pw = document.getElementById('pw').value;
+    err.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: un, password: pw }),
+        });
+        if (!res.ok) throw new Error('bad creds');
+        const data = await res.json();
+        S.token = data.token;
+        localStorage.setItem('pb_token', S.token);
+        showApp();
+    } catch {
+        err.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+    }
+}
+
+function doLogout() {
+    S.token = '';
+    localStorage.removeItem('pb_token');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function showApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    try {
+        const res = await fetch('/api/status', { headers: { 'Authorization': 'Bearer ' + S.token } });
+        if (!res.ok) { doLogout(); return; }
+        const data = await res.json();
+        renderCards(data);
+        renderLogs(data.log_entries || []);
+    } catch (e) {
+        console.error('Failed to load status', e);
+    }
+}
+
+function renderCards(data) {
+    const el = document.getElementById('cards');
+    el.innerHTML = '';
+
+    const skill = data.skill, loop = data.loop, hook = data.hook;
+
+    el.appendChild(makeCard('Skill', skill.name, [
+        ['Trigger', skill.trigger],
+        ['Writes to', skill.writes_to],
+        ['Runs on record', String(skill.runs_found)],
+    ]));
+
+    const loopCard = makeCard('Loop', loop.name, [
+        ['Schedule', loop.schedule],
+        ['Target repo', loop.target_repo],
+        ['Last fired', loop.last_fired_at],
+        ['Next run', loop.next_run_at],
+    ], true);
+    const note = document.createElement('div');
+    note.className = 'snapshot-note';
+    note.textContent = loop.snapshot_note;
+    loopCard.appendChild(note);
+    el.appendChild(loopCard);
+
+    el.appendChild(makeCard('Hook', hook.event + ' on ' + hook.matcher, [
+        ['Matcher', hook.matcher],
+        ['Action', hook.action],
+    ]));
+}
+
+function makeCard(label, name, rows, withDot) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const lbl = document.createElement('div');
+    lbl.className = 'label';
+    lbl.textContent = label;
+    card.appendChild(lbl);
+    const nm = document.createElement('div');
+    nm.className = 'name';
+    if (withDot) {
+        const dot = document.createElement('span');
+        dot.className = 'status-dot';
+        nm.appendChild(dot);
+    }
+    nm.appendChild(document.createTextNode(name));
+    card.appendChild(nm);
+    const dl = document.createElement('dl');
+    for (const [k, v] of rows) {
+        const dt = document.createElement('dt');
+        dt.textContent = k;
+        const dd = document.createElement('dd');
+        dd.textContent = v;
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+    }
+    card.appendChild(dl);
+    return card;
+}
+
+function renderLogs(entries) {
+    const el = document.getElementById('log-list');
+    const empty = document.getElementById('empty-logs');
+    el.innerHTML = '';
+    if (!entries.length) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    entries.forEach((e, i) => {
+        const details = document.createElement('details');
+        details.className = 'log-entry';
+        if (i === 0) details.open = true;
+        const summary = document.createElement('summary');
+        const dateSpan = document.createElement('span');
+        dateSpan.textContent = e.date;
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.textContent = '›';
+        summary.appendChild(dateSpan);
+        summary.appendChild(arrow);
+        const pre = document.createElement('pre');
+        pre.textContent = e.content;
+        details.appendChild(summary);
+        details.appendChild(pre);
+        el.appendChild(details);
+    });
+}
+</script>
+
+</body>
+</html>
